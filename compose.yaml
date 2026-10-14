@@ -1,0 +1,52 @@
+services:
+  parcels-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: parcels
+      POSTGRES_USER: huertos
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-huertos_local}
+    volumes: [parcels-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U huertos -d parcels"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  monitoring-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: monitoring
+      POSTGRES_USER: huertos
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-huertos_local}
+    volumes: [monitoring-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U huertos -d monitoring"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  parcel-service:
+    build:
+      context: .
+      dockerfile: parcel-service/Dockerfile
+    ports: ["8081:8081"]
+    environment:
+      DB_URL: jdbc:postgresql://parcels-db:5432/parcels
+      DB_PASSWORD: ${DB_PASSWORD:-huertos_local}
+      MONITORING_URL: http://monitoring-service:8082
+    depends_on:
+      parcels-db:
+        condition: service_healthy
+  monitoring-service:
+    build:
+      context: .
+      dockerfile: monitoring-service/Dockerfile
+    ports: ["8082:8082"]
+    environment:
+      DB_URL: jdbc:postgresql://monitoring-db:5432/monitoring
+      DB_PASSWORD: ${DB_PASSWORD:-huertos_local}
+      PARCEL_URL: http://parcel-service:8081
+    depends_on:
+      monitoring-db:
+        condition: service_healthy
+volumes:
+  parcels-data:
+  monitoring-data:
