@@ -1,0 +1,134 @@
+{
+  "info": {
+    "name": "Examen Huertos Urbanos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "parcels",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "monitoring",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "parcelId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1 Registrar parcela",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{parcels}}/api/v1/parcels",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Huerto Postman\",\n  \"location\": {\n    \"latitude\": 28.63,\n    \"longitude\": -106.08\n  },\n  \"soilType\": \"LIMOSO\",\n  \"ownerOrLead\": \"Edwin Ledezma\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Creación\", () => pm.response.to.have.status(201));",
+              "if(pm.response.code===201) pm.collectionVariables.set(\"parcelId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 Listar",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{parcels}}/api/v1/parcels"
+      }
+    },
+    {
+      "name": "3 Detalle y estado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{parcels}}/api/v1/parcels/{{parcelId}}"
+      }
+    },
+    {
+      "name": "4 Registrar lectura con alerta",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{monitoring}}/api/v1/readings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"parcelId\": \"{{parcelId}}\",\n  \"soilMoisture\": 10,\n  \"temperature\": 25,\n  \"ph\": 6.5,\n  \"nitrogen\": 40,\n  \"phosphorus\": 20,\n  \"potassium\": 100,\n  \"airQuality\": 50,\n  \"measuredAt\": \"2026-01-01T12:00:00Z\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5 Estado actual",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{monitoring}}/api/v1/readings/parcels/{{parcelId}}/current"
+      }
+    },
+    {
+      "name": "6 Duplicado (409)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{parcels}}/api/v1/parcels",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Huerto Postman\",\n  \"location\": {\n    \"latitude\": 28.63,\n    \"longitude\": -106.08\n  },\n  \"soilType\": \"LIMOSO\",\n  \"ownerOrLead\": \"Edwin Ledezma\"\n}"
+        }
+      }
+    },
+    {
+      "name": "7 Validación (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{parcels}}/api/v1/parcels",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"location\": {\n    \"latitude\": 28.63,\n    \"longitude\": -106.08\n  },\n  \"soilType\": \"LIMOSO\",\n  \"ownerOrLead\": \"Edwin Ledezma\"\n}"
+        }
+      }
+    },
+    {
+      "name": "8 No encontrado (404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{parcels}}/api/v1/parcels/00000000-0000-0000-0000-000000000000"
+      }
+    }
+  ]
+}

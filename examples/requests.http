@@ -1,0 +1,33 @@
+### 1. Registrar parcela; copiar id de la respuesta en @parcelId
+POST http://localhost:8081/api/v1/parcels
+Content-Type: application/json
+
+{"name":"  <b>Huerto Norte</b>  ","location":{"latitude":28.63,"longitude":-106.08},"soilType":"LIMOSO","ownerOrLead":"Edwin Ledezma"}
+
+### 2. Listar
+GET http://localhost:8081/api/v1/parcels
+
+### 3. Sustituir UUID
+@parcelId = 11111111-1111-1111-1111-111111111111
+GET http://localhost:8081/api/v1/parcels/{{parcelId}}
+
+### 4. Registrar lectura con alerta de humedad baja
+POST http://localhost:8082/api/v1/readings
+Content-Type: application/json
+
+{"parcelId":"{{parcelId}}","soilMoisture":10,"temperature":25,"ph":6.5,"nitrogen":40,"phosphorus":20,"potassium":100,"airQuality":50,"measuredAt":"2026-01-01T12:00:00Z"}
+
+### 5. Consultar estado
+GET http://localhost:8082/api/v1/readings/parcels/{{parcelId}}/current
+
+### 6. Validación: respuesta 400
+POST http://localhost:8081/api/v1/parcels
+Content-Type: application/json
+
+{"name":"","location":{"latitude":100,"longitude":-106.08},"soilType":"LIMOSO","ownerOrLead":""}
+
+### 7. UUID inválido: respuesta 400
+GET http://localhost:8081/api/v1/parcels/invalido
+
+### 8. Parcela inexistente: respuesta 404
+GET http://localhost:8081/api/v1/parcels/00000000-0000-0000-0000-000000000000
